@@ -18,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -54,8 +55,29 @@ public class JournalService {
     }
 
     @Transactional(readOnly = true)
-    public PaginationResponse<JournalResponse> getAllJournalEntries(String email, int page, int size, String sortBy, String direction) {
+    public PaginationResponse<JournalResponse> getAllJournalEntries(
+            String email,
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+        return getAllJournalEntries(
+                email, page, size, sortBy, direction, null, null, null
+        );
+    }
 
+    @Transactional(readOnly = true)
+    public PaginationResponse<JournalResponse> getAllJournalEntries(
+            String email,
+            int page,
+            int size,
+            String sortBy,
+            String direction,
+            String search,
+            Instant fromDate,
+            Instant toDate
+    ) {
         if (!allowedSortFields.contains(sortBy)) {
             throw new IllegalArgumentException("Invalid sort field");
         }
@@ -64,15 +86,33 @@ public class JournalService {
             throw new IllegalArgumentException("Invalid pagination parameters");
         }
 
+        if (fromDate != null && toDate != null && fromDate.isAfter(toDate)) {
+            throw new IllegalArgumentException("fromDate must be earlier than or equal to toDate");
+        }
+
+        if (search != null && search.length() > 200) {
+            throw new IllegalArgumentException("Search text cannot exceed 200 characters");
+        }
+
+        String normalizedSearch = search == null || search.isBlank()
+                ? null
+                : search.trim();
+
         UserEntity user = getUser(email);
 
         Sort.Direction sortDirection = Sort.Direction.fromString(direction);
-
-        Sort sort = Sort.by(sortDirection, sortBy).and(Sort.by(Sort.Direction.DESC, "id"));
+        Sort sort = Sort.by(sortDirection, sortBy)
+                .and(Sort.by(Sort.Direction.DESC, "id"));
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<JournalEntity> journalPage = journalRepository.findAllByUserId(user.getId(), pageable);
+        Page<JournalEntity> journalPage = journalRepository.searchByUserId(
+                user.getId(),
+                normalizedSearch,
+                fromDate,
+                toDate,
+                pageable
+        );
 
         return PaginationResponse.<JournalResponse>builder()
                 .content(journalPage.getContent()
