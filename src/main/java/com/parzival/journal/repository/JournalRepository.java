@@ -11,15 +11,17 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface JournalRepository
-        extends JpaRepository<JournalEntity, UUID> {
+public interface JournalRepository extends JpaRepository<JournalEntity, UUID> {
 
-    Page<JournalEntity> findAllByUserId(UUID userId, Pageable pageable);
+    Page<JournalEntity> findAllByUserIdAndDeletedAtIsNull(UUID userId, Pageable pageable);
+
+    Page<JournalEntity> findAllByUserIdAndDeletedAtIsNotNull(UUID userId, Pageable pageable);
 
     @Query("""
             SELECT j
             FROM JournalEntity j
             WHERE j.user.id = :userId
+              AND j.deletedAt IS NULL
               AND (
                     :search IS NULL
                     OR LOWER(j.title) LIKE LOWER(CONCAT('%', :search, '%'))
@@ -28,7 +30,7 @@ public interface JournalRepository
               AND (:fromDate IS NULL OR j.createdAt >= :fromDate)
               AND (:toDate IS NULL OR j.createdAt <= :toDate)
             """)
-    Page<JournalEntity> searchByUserId(
+    Page<JournalEntity> searchActiveByUserId(
             @Param("userId") UUID userId,
             @Param("search") String search,
             @Param("fromDate") Instant fromDate,
@@ -36,5 +38,7 @@ public interface JournalRepository
             Pageable pageable
     );
 
-    Optional<JournalEntity> findByIdAndUserId(UUID journalId, UUID userId);
+    Optional<JournalEntity> findByIdAndUserIdAndDeletedAtIsNull(UUID journalId, UUID userId);
+
+    Optional<JournalEntity> findByIdAndUserIdAndDeletedAtIsNotNull(UUID journalId, UUID userId);
 }
