@@ -9,11 +9,13 @@ import com.parzival.journal.util.ApiResponseUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @RestController
@@ -29,7 +31,6 @@ public class JournalController {
             @Valid @RequestBody JournalRequest request,
             Authentication authentication
     ) {
-
         UUID journalId = journalService.saveJournalEntry(
                 request,
                 authentication.getName()
@@ -45,25 +46,30 @@ public class JournalController {
     @GetMapping
     public ResponseEntity<ApiResponse<PaginationResponse<JournalResponse>>> getAllJournals(
             Authentication authentication,
-
             @RequestParam(defaultValue = "0") int page,
-
             @RequestParam(defaultValue = "10") int size,
-
             @RequestParam(defaultValue = "createdAt") String sortBy,
-
-            @RequestParam(defaultValue = "DESC") String direction
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant fromDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant toDate
     ) {
-
         return ResponseEntity.ok(
-                ApiResponseUtil.success("Journals fetched successfully",
-                journalService.getAllJournalEntries(
-                        authentication.getName(),
-                        page,
-                        size,
-                        sortBy,
-                        direction
-                ))
+                ApiResponseUtil.success(
+                        "Journals fetched successfully",
+                        journalService.getAllJournalEntries(
+                                authentication.getName(),
+                                page,
+                                size,
+                                sortBy,
+                                direction,
+                                search,
+                                fromDate,
+                                toDate
+                        )
+                )
         );
     }
 
@@ -72,11 +78,10 @@ public class JournalController {
             @PathVariable UUID id,
             Authentication authentication
     ) {
-
         return ResponseEntity.ok(
-                ApiResponseUtil.success("Journal fetched successfully", journalService.getJournalEntry(
-                        id,
-                        authentication.getName())
+                ApiResponseUtil.success(
+                        "Journal fetched successfully",
+                        journalService.getJournalEntry(id, authentication.getName())
                 )
         );
     }
@@ -87,7 +92,6 @@ public class JournalController {
             @Valid @RequestBody JournalRequest request,
             Authentication authentication
     ) {
-
         journalService.updateJournalEntry(
                 id,
                 request,
@@ -95,8 +99,7 @@ public class JournalController {
         );
 
         return ResponseEntity.ok(
-                ApiResponseUtil.success("Journal updated Successfully",
-                        null)
+                ApiResponseUtil.success("Journal updated successfully", null)
         );
     }
 
@@ -105,17 +108,10 @@ public class JournalController {
             @PathVariable UUID id,
             Authentication authentication
     ) {
-
-        journalService.deleteJournalEntry(
-                id,
-                authentication.getName()
-        );
+        journalService.deleteJournalEntry(id, authentication.getName());
 
         return ResponseEntity.ok(
-                ApiResponseUtil.success(
-                        "Journal deleted successfully",
-                        null
-                )
+                ApiResponseUtil.success("Journal deleted successfully", null)
         );
     }
 }
