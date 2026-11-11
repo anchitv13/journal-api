@@ -53,4 +53,23 @@ public class AuthController {
                 )
         );
     }
+
+    @PatchMapping("/me/password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @Valid @RequestBody ChangePasswordRequest request,
+            Authentication authentication
+    ) {
+        userProfileService.changePassword(
+                authentication.getName(),
+                request.getCurrentPassword(),
+                request.getNewPassword()
+        );
+
+        return ResponseEntity.ok(
+                ApiResponseUtil.success(
+                        "Password changed successfully. Please sign in again after your current token expires.",
+                        null
+                )
+        );
+    }
 }
