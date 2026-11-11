@@ -38,4 +38,9 @@ public class JournalEntity implements Serializable {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
 }
