@@ -73,6 +73,36 @@ public class JournalController {
         );
     }
 
+    @GetMapping("/trash")
+    public ResponseEntity<ApiResponse<PaginationResponse<JournalResponse>>> getTrash(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(ApiResponseUtil.success(
+                "Trash fetched successfully",
+                journalService.getTrash(authentication.getName(), page, size)
+        ));
+    }
+
+    @PatchMapping("/{id}/restore")
+    public ResponseEntity<ApiResponse<Void>> restoreJournal(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        journalService.restoreJournalEntry(id, authentication.getName());
+        return ResponseEntity.ok(ApiResponseUtil.success("Journal restored successfully", null));
+    }
+
+    @DeleteMapping("/{id}/permanent")
+    public ResponseEntity<ApiResponse<Void>> permanentlyDeleteJournal(
+            @PathVariable UUID id,
+            Authentication authentication
+    ) {
+        journalService.permanentlyDeleteJournalEntry(id, authentication.getName());
+        return ResponseEntity.ok(ApiResponseUtil.success("Journal permanently deleted", null));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<JournalResponse>> getJournal(
             @PathVariable UUID id,
