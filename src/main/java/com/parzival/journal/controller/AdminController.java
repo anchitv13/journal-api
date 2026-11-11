@@ -7,6 +7,7 @@ import com.parzival.journal.resource.PaginationResponse;
 import com.parzival.journal.resource.UpdateUserStatusRequest;
 import com.parzival.journal.service.AdminService;
 import com.parzival.journal.util.ApiResponseUtil;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin")
+@Tag(name = "Admin Controller", description = "Controller to use admin APIs")
 @RequiredArgsConstructor
 public class AdminController {
 

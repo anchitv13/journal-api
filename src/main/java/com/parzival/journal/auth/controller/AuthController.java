@@ -5,6 +5,7 @@ import com.parzival.journal.auth.service.AuthService;
 import com.parzival.journal.auth.service.UserProfileService;
 import com.parzival.journal.resource.ApiResponse;
 import com.parzival.journal.util.ApiResponseUtil;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication Controller", description = "Controller to authenticate users")
 @RequiredArgsConstructor
 public class AuthController {
 

@@ -6,6 +6,7 @@ import com.parzival.journal.resource.JournalResponse;
 import com.parzival.journal.resource.PaginationResponse;
 import com.parzival.journal.service.JournalService;
 import com.parzival.journal.util.ApiResponseUtil;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/journals")
+@Tag(name = "Journal Controller", description = "Controller to use Journal APIs")
 @RequiredArgsConstructor
 public class JournalController {
 
