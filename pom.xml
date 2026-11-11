@@ -46,7 +46,7 @@
         <!-- Source: https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-webflux-ui -->
         <dependency>
             <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>3.2.0</version>
             <scope>compile</scope>
         </dependency>
