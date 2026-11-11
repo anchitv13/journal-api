@@ -106,7 +106,7 @@ public class JournalService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        Page<JournalEntity> journalPage = journalRepository.searchByUserId(
+        Page<JournalEntity> journalPage = journalRepository.searchActiveByUserId(
                 user.getId(),
                 normalizedSearch,
                 fromDate,
@@ -179,9 +179,70 @@ public class JournalService {
                 user.getId()
         );
 
-        journalRepository.delete(entity);
+        entity.setDeletedAt(Instant.now());
+        entity.setDeletedBy(user.getId());
+        journalRepository.save(entity);
 
-        log.info("Journal entry deleted successfully");
+        log.info("Journal entry moved to trash successfully");
+    }
+
+    @Transactional(readOnly = true)
+    public PaginationResponse<JournalResponse> getTrash(
+            String email,
+            int page,
+            int size
+    ) {
+        validatePageSize(page, size);
+        UserEntity user = getUser(email);
+        Page<JournalEntity> journalPage = journalRepository
+                .findAllByUserIdAndDeletedAtIsNotNull(
+                        user.getId(),
+                        PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "deletedAt"))
+                );
+
+        return toPaginationResponse(journalPage);
+    }
+
+    @Transactional
+    public void restoreJournalEntry(UUID journalId, String email) {
+        UserEntity user = getUser(email);
+        JournalEntity entity = journalRepository
+                .findByIdAndUserIdAndDeletedAtIsNotNull(journalId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Deleted journal entry not found"));
+
+        entity.setDeletedAt(null);
+        entity.setDeletedBy(null);
+        entity.setUpdatedAt(Instant.now());
+        journalRepository.save(entity);
+    }
+
+    @Transactional
+    public void permanentlyDeleteJournalEntry(UUID journalId, String email) {
+        UserEntity user = getUser(email);
+        JournalEntity entity = journalRepository
+                .findByIdAndUserIdAndDeletedAtIsNotNull(journalId, user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Deleted journal entry not found"));
+
+        journalRepository.delete(entity);
+    }
+
+    private void validatePageSize(int page, int size) {
+        if (page < 0 || size < 1 || size > 100) {
+            throw new IllegalArgumentException("Invalid pagination parameters");
+        }
+    }
+
+    private PaginationResponse<JournalResponse> toPaginationResponse(Page<JournalEntity> page) {
+        return PaginationResponse.<JournalResponse>builder()
+                .content(page.getContent().stream().map(journalMapper::toResponse).toList())
+                .page(page.getNumber())
+                .size(page.getSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .empty(page.isEmpty())
+                .build();
     }
 
     private UserEntity getUser(String email) {
@@ -197,7 +258,7 @@ public class JournalService {
             UUID userId
     ) {
 
-        return journalRepository.findByIdAndUserId(
+        return journalRepository.findByIdAndUserIdAndDeletedAtIsNull(
                 journalId,
                 userId
         ).orElseThrow(() ->
