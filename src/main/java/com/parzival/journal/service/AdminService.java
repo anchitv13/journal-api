@@ -88,7 +88,7 @@ public class AdminService {
         );
 
         Page<JournalEntity> journalPage =
-                journalRepository.findAllByUserId(user.getId(), pageable);
+                journalRepository.findAllByUserIdAndDeletedAtIsNull(user.getId(), pageable);
 
         return PaginationResponse.<JournalResponse>builder()
                 .content(journalPage.getContent().stream()
