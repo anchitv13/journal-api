@@ -2,6 +2,7 @@ package com.parzival.journal.exception;
 
 import com.parzival.journal.resource.ApiResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,6 +28,14 @@ public class GlobalExceptionHandler {
     ) {
         return ResponseEntity.badRequest()
                 .body(error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
+            BadCredentialsException ex
+    ) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(error("Invalid email or password"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
